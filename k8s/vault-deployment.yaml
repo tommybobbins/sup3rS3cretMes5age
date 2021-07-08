@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: vault
   name: vault
@@ -13,7 +12,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: vault
     spec:
@@ -23,6 +21,8 @@ spec:
         env:
         - name: VAULT_DEV_ROOT_TOKEN_ID
           value: "supersecret"
+        - name: SKIP_SETCAP
+          value: "1"
         securityContext:
-            capabilities:
+          capabilities:
               add: ["IPC_LOCK"]
