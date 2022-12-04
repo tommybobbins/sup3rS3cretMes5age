@@ -10,15 +10,12 @@ variable "host_name" {
   default     = "super-secret-1"
 }
 
-variable "aws_region" {
-  description = "AWS Region"
-  default     = "us-east-1"
+locals {
+  region           = "us-east-1"
 }
 
-variable "aws_az" {
-  description = "AWS Zone"
-  type        = string
-  default     = "us-east-1a"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 variable "key_name" {
@@ -35,20 +32,10 @@ variable "rules" {
   }))
   default = [
     {
-      port        = 80
-      proto       = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
       port        = 443
       proto       = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
     },
-    {
-      port        = 2020
-      proto       = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
   ]
 
 
@@ -58,7 +45,12 @@ variable "rules" {
 locals {
   userdata = {
     project_name    = var.project_name,
-    jupyter_passwd  = random_password.jupy_string.result,
     account_id      = data.aws_caller_identity.current.account_id
   }
 }
+
+data "aws_acm_certificate" "supersecret" {
+  domain   = "chapelramblers.org"
+  statuses = ["ISSUED"]
+}
+

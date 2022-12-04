@@ -1,10 +1,14 @@
 provider "aws" {
-  region = var.aws_region
+  region = local.region
 }
 
 data "aws_ssm_parameter" "ami_id" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
+
+#locals {
+#  azs             = formatlist("${data.aws_region.current.name}%s", ["a", "b"])
+#}
 
 
 module "vpc" {
@@ -12,8 +16,8 @@ module "vpc" {
 
   name                            = "${var.project_name}-vpc"
   cidr                            = "10.23.0.0/16"
-  azs                             = ["${var.aws_az}"]
-  public_subnets                  = ["10.23.23.0/24"]
+  azs                             = ["${local.region}a", "${local.region}b"]
+  public_subnets                  = ["10.23.23.0/24","10.23.24.0/24"]
   enable_ipv6                     = true
   assign_ipv6_address_on_creation = true
   public_subnet_ipv6_prefixes     = [0, 1]

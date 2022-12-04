@@ -1,4 +1,4 @@
-resource "aws_instance" "my-instance" {
+resource "aws_instance" "supersecret" {
   ami       = data.aws_ssm_parameter.ami_id.value
   subnet_id = module.vpc.public_subnets[0]
   #ipv6_cidr_block                 = cidrsubnet(module.vpc.ipv6_cidr_block, 8, 1)
@@ -12,11 +12,11 @@ resource "aws_instance" "my-instance" {
   tags = {
     Name            = var.host_name
   }
-  #  root_block_device {
-  #   volume_type = "gp2"
-  #   volume_size = 15 
-  #   encrypted   = true
-  # }
+    root_block_device {
+     volume_type = "gp3"
+     volume_size = 15 
+     encrypted   = true
+   }
 
 }
 

@@ -63,30 +63,19 @@ services:
     environment:
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: supersecret
-      SUPERSECRETMESSAGE_HTTP_BINDING_ADDRESS: ":8082"
+      SUPERSECRETMESSAGE_HTTP_BINDING_ADDRESS=:80
+      SUPERSECRETMESSAGE_HTTPS_BINDING_ADDRESS=:443
+      SUPERSECRETMESSAGE_HTTPS_REDIRECT_ENABLED=true
+      SUPERSECRETMESSAGE_TLS_AUTO_DOMAIN=secrets.chapelramblers.org
     ports:
-      - "8082:8082"
+      - "443:443"
+      - "80:80"
     depends_on:
       - vault
     networks:
       - skynet
 
 
-  nginx:
-    image: nginx
-    container_name: nginx
-    restart: always
-    networks:
-      - skynet
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /root/jupyter.crt:/etc/nginx/self.crt
-      - /root/jupyter.key:/etc/nginx/self.key
-      - /root/nginx.conf:/etc/nginx/nginx.conf
-
-      
 networks:
   skynet:
     driver: bridge
@@ -96,94 +85,5 @@ networks:
         - subnet: 192.168.69.0/24
 EOF
 
-cat <<"EOF" > /root/nginx.conf
-user  nginx;
-worker_processes  auto;
-
-error_log  /var/log/nginx/error.log warn;
-pid        /var/run/nginx.pid;
-
-
-events {
-    worker_connections  1024;
-}
-
-
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log  /var/log/nginx/access.log  main;
-
-    sendfile        on;
-    #tcp_nopush     on;
-
-    keepalive_timeout  65;
-
-    #gzip  on;
-
-    include /etc/nginx/conf.d/*.conf;
-
-    server {
-        listen 80 default;
-        server_name  _;
-
-        return 301 https://$host$request_uri;
-    }
-
-    upstream supersecret {
-        server supersecret:8082;
-    }
-
-    
-    ############## SuperSecret ####################
-    server {
-        listen      0.0.0.0:443 ssl;
-        server_name   supersecret.remote.lan
-                      www.supersecret.remote.lan;
-
-        ssl_certificate     /etc/nginx/self.crt;
-        ssl_certificate_key /etc/nginx/self.key;
-
-        ssl_protocols TLSv1.2;
-        ssl_prefer_server_ciphers on;
-        ssl_ciphers EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA512:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:ECDH+AESGCM:ECDH+AES256:DH+AESGCM:DH+AES256:RSA+AESGCM:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS;
-        ssl_session_cache  builtin:1000  shared:SSL:10m;
-
-        access_log  /var/log/nginx/supersecret.log ;
-        error_log  /var/log/nginx/supersecret.error.log debug;
-
-        location / {
-          proxy_set_header        Host $host;
-          proxy_set_header        X-Real-IP $remote_addr;
-          proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header        X-Forwarded-Proto $scheme;
-          proxy_pass              http://supersecret;
-          proxy_read_timeout      90;
-        }
-
-        location ~* /(api/kernels/[^/]+/(channels|iopub|shell|stdin)|terminals/websocket)/? {
-           proxy_pass http://supersecret;
-
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header Host $host;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           # WebSocket support
-           proxy_http_version 1.1;
-           proxy_set_header      Upgrade "websocket";
-           proxy_set_header      Connection "Upgrade";
-           proxy_read_timeout    86400;
-
-        }
-    }
-
-}
-EOF
-
-#sed -i 's/bobbins/${jupyter_passwd}/g' /root/docker-compose.yml;
 #$(aws ecr get-login --region eu-west-1 | sed -e 's/-e none//g')
 cd /root && echo "y" | /usr/local/bin/docker-compose up --detach
