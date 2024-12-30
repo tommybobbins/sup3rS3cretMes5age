@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"log"
@@ -7,13 +7,13 @@ import (
 )
 
 type conf struct {
-	HttpBindingAddress string
-	HttpsBindingAddress string
+	HttpBindingAddress   string
+	HttpsBindingAddress  string
 	HttpsRedirectEnabled bool
-	TLSAutoDomain string
-	TLSCertFilepath string
-	TLSCertKeyFilepath string
-	VaultPrefix string
+	TLSAutoDomain        string
+	TLSCertFilepath      string
+	TLSCertKeyFilepath   string
+	VaultPrefix          string
 }
 
 const HttpBindingAddressVarenv = "SUPERSECRETMESSAGE_HTTP_BINDING_ADDRESS"
@@ -24,7 +24,7 @@ const TLSCertFilepathVarenv = "SUPERSECRETMESSAGE_TLS_CERT_FILEPATH"
 const TLSCertKeyFilepathVarenv = "SUPERSECRETMESSAGE_TLS_CERT_KEY_FILEPATH"
 const VaultPrefixenv = "SUPERSECRETMESSAGE_VAULT_PREFIX"
 
-func loadConfig() conf {
+func LoadConfig() conf {
 	var cnf conf
 
 	cnf.HttpBindingAddress = os.Getenv(HttpBindingAddressVarenv)

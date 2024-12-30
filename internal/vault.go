@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -56,8 +56,6 @@ func (v vault) Store(msg string, ttl string) (token string, err error) {
 }
 
 func (v vault) createOneTimeToken(ttl string) (string, error) {
-	fmt.Println("Info: creating message with ttl: ", ttl)
-
 	c, err := v.newVaultClient()
 	if err != nil {
 		return "", err
@@ -173,5 +171,4 @@ func (v vault) newVaultClientToRenewToken() {
 			log.Printf("auth token: successfully renewed; remaining duration: %ds", info.Secret.Auth.LeaseDuration)
 		}
 	}
-
 }
